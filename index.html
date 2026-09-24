@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EV Route Planner 4.2 | Smart Route & Charging Optimizer</title>
+<title>EV Route Planner 4.2.1 | Smart Route & Charging Optimizer</title>
 <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&f[]=cabinet-grotesk@500,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
@@ -24,7 +24,7 @@
   <section class="panel left" id="inputPanel">
     <div class="hero">
       <div>
-        <h1>EV Route Planner 4.2</h1>
+        <h1>EV Route Planner 4.2.1</h1>
         <div class="mut">Car route and charging planner with ORS routing, independent road restrictions, route alternatives, and adjustable access points.</div>
       </div>
       <button class="theme" id="themeBtn" aria-label="Toggle theme">◐</button>
@@ -369,7 +369,7 @@ async function orsRoutes(start,end,includeAlternatives){
   const body={coordinates:[[start.lon,start.lat],[end.lon,end.lat]],instructions:false,preference:routePreference()};
   if(avoidFeatures.length)body.options={avoid_features:avoidFeatures};
   if(includeAlternatives)body.alternative_routes={target_count:3,share_factor:0.6,weight_factor:1.4};
-  const data=await fetchJson('https://api.openrouteservice.org/v2/directions/driving-car/geojson',{method:'POST',headers:{'Authorization':key,'Content-Type':'application/json'},body:JSON.stringify(body)},'OpenRouteService route');
+  const data=await fetchJson('https://api.heigit.org/openrouteservice/v2/directions/driving-car/geojson',{method:'POST',headers:{'Authorization':key,'Content-Type':'application/json','Accept':'application/geo+json, application/json'},body:JSON.stringify(body)},'OpenRouteService route');
   if(!data.features?.length)throw new Error('OpenRouteService returned no route');
   return data.features.map(routeFromFeature);
 }
@@ -484,7 +484,7 @@ function refreshMap(){
   });
   if(bounds.length)app.map.fitBounds(bounds,{padding:[30,30]});
 }
-function exportRoute(){const payload={version:'4.2',savedAt:new Date().toISOString(),settings:{evRange:document.getElementById('evRange').value,useMapTiler:document.getElementById('useMapTiler').checked,avoidTolls:document.getElementById('avoidTolls').checked,avoidFerries:document.getElementById('avoidFerries').checked,routePreference:routePreference(),showAlternatives:document.getElementById('showAlternatives').checked,notes:document.getElementById('routeNotes').value},rows:app.rows.map(r=>({start:r.start,end:r.end,charging:r.charging,chargeAdded:r.chargeAdded,miles:r.miles,duration:r.duration,startTime:r.startTime,endTime:r.endTime,batteryStart:r.batteryStart,usage:r.usage,batteryEnd:r.batteryEnd,startResolved:r.startResolved,endResolved:r.endResolved,geometry:r.geometry,startSnapM:r.startSnapM,endSnapM:r.endSnapM,startSnapPoint:r.startSnapPoint,endSnapPoint:r.endSnapPoint}))};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');const requestedName=document.getElementById('saveFilename').value.trim();const filename=requestedName?`${requestedName.replace(/\.json$/i,'')}.json`:`ev-route-${new Date().toISOString().slice(0,19).replace(/[T:]/g,'-')}.json`;a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},0);setStatus('Route saved without API keys')}
+function exportRoute(){const payload={version:'4.2.1',savedAt:new Date().toISOString(),settings:{evRange:document.getElementById('evRange').value,useMapTiler:document.getElementById('useMapTiler').checked,avoidTolls:document.getElementById('avoidTolls').checked,avoidFerries:document.getElementById('avoidFerries').checked,routePreference:routePreference(),showAlternatives:document.getElementById('showAlternatives').checked,notes:document.getElementById('routeNotes').value},rows:app.rows.map(r=>({start:r.start,end:r.end,charging:r.charging,chargeAdded:r.chargeAdded,miles:r.miles,duration:r.duration,startTime:r.startTime,endTime:r.endTime,batteryStart:r.batteryStart,usage:r.usage,batteryEnd:r.batteryEnd,startResolved:r.startResolved,endResolved:r.endResolved,geometry:r.geometry,startSnapM:r.startSnapM,endSnapM:r.endSnapM,startSnapPoint:r.startSnapPoint,endSnapPoint:r.endSnapPoint}))};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');const requestedName=document.getElementById('saveFilename').value.trim();const filename=requestedName?`${requestedName.replace(/\.json$/i,'')}.json`:`ev-route-${new Date().toISOString().slice(0,19).replace(/[T:]/g,'-')}.json`;a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},0);setStatus('Route saved without API keys')}
 function syncEvPreset(){const evRange=document.getElementById('evRange'),evPreset=document.getElementById('evPreset'),match=[...evPreset.options].find(o=>o.value===evRange.value&&o.value!=='other');if(match){evPreset.value=match.value;evRange.readOnly=true}else{evPreset.value='other';evRange.readOnly=false}}
 function importRoute(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);if(!data||!Array.isArray(data.rows))throw new Error('Invalid route file');document.getElementById('saveFilename').value=file.name.replace(/\.json$/i,'');document.getElementById('evRange').value=data.settings?.evRange??document.getElementById('evRange').value;syncEvPreset();document.getElementById('useMapTiler').checked=!!data.settings?.useMapTiler;document.getElementById('avoidTolls').checked=!!data.settings?.avoidTolls;document.getElementById('avoidFerries').checked=!!data.settings?.avoidFerries;document.getElementById('showAlternatives').checked=!!data.settings?.showAlternatives;const preference=data.settings?.routePreference==='shortest'?'shortest':'fastest';document.querySelector(`input[name="routePreference"][value="${preference}"]`).checked=true;document.getElementById('routeNotes').value=data.settings?.notes??'';app.rows=data.rows.map(r=>createRow(r));if(!app.rows.length)addRow({startTime:'08:00',batteryStart:'100'});updateMapProvider(false);render();refreshMap();setStatus('Route and settings loaded · API keys were not imported')}catch(err){alert(err.message||'Could not load route file');setStatus('Load failed','error')}};reader.readAsText(file)}
 document.getElementById('calcBtn').onclick=calculate;document.getElementById('addBtn').onclick=()=>addRow();document.getElementById('saveBtn').onclick=exportRoute;document.getElementById('loadBtn').onclick=()=>document.getElementById('routeFileInput').click();document.getElementById('routeFileInput').addEventListener('change',e=>{importRoute(e.target.files[0]);e.target.value=''});
