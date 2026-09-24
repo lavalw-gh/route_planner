@@ -249,7 +249,7 @@ function render(){rowsEl.innerHTML='';app.rows.forEach((r,i)=>{const tr=document
 <td>${locCell(r.id,'start',r.start,r.startResolved)}</td>
 <td>${locCell(r.id,'end',r.end,r.endResolved)}</td>
 <td><input class="charge-check" data-id="${r.id}" data-key="charging" type="checkbox" ${r.charging?'checked':''} title="Charge at this leg destination"></td>
-<td><input data-id="${r.id}" data-key="chargeAdded" type="number" min="0" max="100" step="0.1" value="${r.chargeAdded}" placeholder="40" ${r.charging?'':'disabled'}></td>
+<td><input data-id="${r.id}" data-key="chargeAdded" type="number" min="0" max="100" step="0.1" value="${r.chargeAdded}" placeholder="" ${r.charging?'':'disabled'}></td>
 <td><input data-id="${r.id}" data-key="miles" type="number" step="0.1" value="${r.miles}"></td>
 <td><input data-id="${r.id}" data-key="duration" type="time" value="${r.duration}" step="60"></td>
 <td><input data-id="${r.id}" data-key="startTime" type="time" value="${r.startTime||''}"></td>
